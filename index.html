@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>老賴茶棧 - 露營飲料團購統計點餐</title>
+  <style>
+    :root {
+      --primary-color: #3b5d4f;
+      --primary-light: #e8f0ec;
+      --accent-color: #c85a17;
+      --accent-hover: #a6460f;
+      --bg-color: #f7f8f6;
+      --card-bg: #ffffff;
+      --text-main: #2c3e50;
+      --text-sub: #666666;
+      --disabled-bg: #e9ecef;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 12px;
+      color: var(--text-main);
+    }
+    .container {
+      max-width: 650px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      padding: 15px 0 10px 0;
+    }
+    h1 {
+      color: var(--primary-color);
+      font-size: 1.6rem;
+      margin: 0 0 5px 0;
+    }
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: var(--primary-color);
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 0.88rem;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+    
+    /* Menu Styling */
+    .menu-category {
+      font-weight: bold;
+      color: var(--accent-color);
+      margin: 18px 0 8px 0;
+      font-size: 1.05rem;
+      border-left: 4px solid var(--accent-color);
+      padding-left: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .category-note {
+      font-size: 0.75rem;
+      color: #888;
+      font-weight: normal;
+    }
+    .item-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+    .item-card:last-child {
+      border-bottom: none;
+    }
+    .item-info {
+      flex: 1;
+      padding-right: 10px;
+    }
+    .item-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tag-no-topping {
+      font-size: 0.7rem;
+      background-color: #fff1f0;
+      color: #f5222d;
+      border: 1px solid #ffa39e;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+    .tag-cold-only {
+      font-size: 0.7rem;
+      background-color: #e6f7ff;
+      color: #1890ff;
+      border: 1px solid #91d5ff;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+    .item-desc {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 2px;
+    }
+    .item-price {
+      font-size: 0.85rem;
+      color: #555;
+      margin-top: 2px;
+    }
+    .btn-add {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-add:hover {
+      background-color: #2d483d;
+    }
+
+    /* Modal Styling */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.55);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      width: 92%;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+    .modal-header h3 {
+      margin: 0;
+      color: var(--primary-color);
+      font-size: 1.2rem;
+    }
+    .modal-header p {
+      margin: 4px 0 0 0;
+      font-size: 0.8rem;
+      color: #777;
+    }
+    .option-group {
+      margin-bottom: 14px;
+    }
+    .option-group label.group-title {
+      display: block;
+      font-weight: bold;
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .radio-group label, .checkbox-group label {
+      background: #f0f2f1;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .radio-group input, .checkbox-group input {
+      display: none;
+    }
+    .radio-group input:checked + span, .checkbox-group input:checked + span {
+      background: var(--primary-color);
+      color: white;
+      font-weight: 500;
+    }
+    /* Disabled Options in Modal */
+    .checkbox-group label.disabled, .radio-group label.disabled {
+      background: var(--disabled-bg);
+      color: #aaa;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .checkbox-group label.disabled span, .radio-group label.disabled span {
+      background: transparent !important;
+      color: #aaa !important;
+    }
+
+    .btn-confirm {
+      width: 100%;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 14px;
+      transition: background 0.2s;
+    }
+    .btn-confirm:hover {
+      background-color: var(--accent-hover);
+    }
+
+    /* Cart Styling */
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
+    }
+    .cart-item-details {
+      flex: 1;
+    }
+    .cart-item-title {
+      font-weight: 600;
+    }
+    .cart-item-spec {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 2px;
+    }
+    .cart-item-price {
+      font-weight: bold;
+      color: var(--accent-color);
+      margin-top: 2px;
+    }
+    .btn-del {
+      background: #ff4d4f;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .btn-copy {
+      background-color: #2b8a3e;
+      color: white;
+      width: 100%;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-copy:hover {
+      background-color: #237032;
+    }
+    .empty-cart {
+      text-align: center;
+      color: #999;
+      padding: 20px 0;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>⛺ 露營飲料團購點餐</h1>
+    <div class="subtitle">老賴茶棧 2026.08 最新版菜單</div>
+  </header>
+
+  <!-- 1. 訂購人資料 -->
+  <div class="card">
+    <h2>1. 訂購人資訊</h2>
+    <div class="form-group">
+      <label for="group-id">團露編號 *</label>
+      <input type="text" id="group-id" placeholder="例如：A03 / B區帳號">
+    </div>
+    <div class="form-group">
+      <label for="user-name">姓名 *</label>
+      <input type="text" id="user-name" placeholder="請輸入聯絡姓名">
+    </div>
+    <div class="form-group">
+      <label for="user-phone">電話 *</label>
+      <input type="tel" id="user-phone" placeholder="請輸入手機號碼">
+    </div>
+  </div>
+
+  <!-- 2. 飲料菜單 -->
+  <div class="card">
+    <h2>2. 選擇飲品</h2>
+    <div id="menu-container"></div>
+  </div>
+
+  <!-- 3. 購物車與統計 -->
+  <div class="card">
+    <h2>3. 訂購明細與統計</h2>
+    <div id="cart-list">
+      <div class="empty-cart">尚未選擇任何品項</div>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 2px solid #eee; font-weight: bold;">
+      <span id="cart-count">總數量：0 杯/瓶</span>
+      <span id="cart-total" style="font-size: 1.2rem; color: var(--accent-color);">總金額：$0</span>
+    </div>
+    <button class="btn-copy" onclick="copyOrderDetails()">📋 複製全品項明細</button>
+  </div>
+</div>
+
+<!-- 客製化彈窗 (選擇容器、冰塊、甜度、加料) -->
+<div class="modal" id="custom-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-title">商品名稱</h3>
+      <p id="modal-subtitle"></p>
+    </div>
+    
+    <div class="option-group">
+      <label class="group-title">規格（杯/瓶）</label>
+      <div class="radio-group" id="size-options"></div>
+    </div>
+
+    <div class="option-group">
+      <label class="group-title">冰塊溫度</label>
+      <div class="radio-group" id="ice-options"></div>
+    </div>
+
+    <div class="option-group">
+      <label class="group-title">甜度</label>
+      <div class="radio-group" id="sugar-options"></div>
+    </div>
+
+    <div class="option-group" id="topping-section">
+      <label class="group-title" id="topping-title">加料區</label>
+      <div class="checkbox-group" id="topping-options"></div>
+      <div id="topping-msg" style="font-size: 0.78rem; color: #d9363e; margin-top: 6px; display: none;"></div>
+    </div>
+
+    <button class="btn-confirm" onclick="addToCart()">加入購物車</button>
+    <button style="width:100%; border:none; background:none; margin-top:10px; color:#777; cursor:pointer;" onclick="closeModal()">取消</button>
+  </div>
+</div>
+
+<script>
+  // 完整菜單資料 (依據老賴茶棧 2026.08 中南部版圖片)
+  // 屬性說明:
+  // - cup: 杯裝價格
+  // - bottle: 瓶裝價格 (若無則為 null)
+  // - noTopping: 🚫 不可額外加料
+  // - coldOnly: ❄️ 僅可製作冷飲
+  // - fixedSugar: 甜度固定
+  // - type: 茶類屬性用於加料條件判斷 ["tea"(純茶), "milk"(奶類), "taihou"(太后), "soy"(豆漿), "fruit"(鮮果), "lemon"(檸檬), "plum"(烏梅)]
+  const menuData = [
+    {
+      category: "NEW・白桃烏龍",
+      note: "僅可製作冷飲，不可額外加料",
+      items: [
+        { name: "白桃烏龍", cup: 45, bottle: null, noTopping: true, coldOnly: true, type: ["tea"] },
+        { name: "桃桃烏龍", cup: 70, bottle: null, noTopping: true, coldOnly: true, type: ["tea"] },
+        { name: "桃桃烏龍奶茶", cup: 75, bottle: null, noTopping: true, coldOnly: true, type: ["milk"] },
+        { name: "奶蓋桃桃烏龍", cup: 75, bottle: null, noTopping: true, coldOnly: true, type: ["tea"] }
+      ]
+    },
+    {
+      category: "蘋果系列",
+      note: "最佳風味微糖，最多半糖",
+      items: [
+        { name: "蘋果香青", cup: 70, bottle: null, type: ["tea"] },
+        { name: "蘋果烏龍", cup: 70, bottle: null, type: ["tea"] },
+        { name: "蘋果青凍飲", cup: 75, bottle: null, noTopping: true, type: ["tea"] },
+        { name: "奶蓋蘋果青", cup: 80, bottle: null, noTopping: true, type: ["tea"] }
+      ]
+    },
+    {
+      category: "老賴招牌",
+      items: [
+        { name: "老賴紅茶", cup: 35, bottle: 115, type: ["tea"] },
+        { name: "老賴豆漿", cup: 50, bottle: 160, note: "無咖啡因", type: ["soy"] },
+        { name: "豆香紅茶", cup: 55, bottle: 175, type: ["tea", "soy"] },
+        { name: "太后牛乳", cup: 60, bottle: 190, type: ["taihou"] },
+        { name: "珍珠紅茶", cup: 40, bottle: null, noTopping: true, type: ["tea"] },
+        { name: "珍珠奶茶", cup: 50, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "烏梅紅茶", cup: 50, bottle: 160, type: ["tea", "plum"] },
+        { name: "冬瓜檸檬", cup: 50, bottle: 160, fixedSugar: true, type: ["lemon"] }
+      ]
+    },
+    {
+      category: "醇原茶",
+      items: [
+        { name: "冷香青茶", cup: 35, bottle: 115, type: ["tea"] },
+        { name: "茉翠香綠", cup: 35, bottle: 115, type: ["tea"] },
+        { name: "文清烏龍", cup: 35, bottle: 115, type: ["tea"] }
+      ]
+    },
+    {
+      category: "醇奶茶",
+      note: "無糖仍有甜度",
+      items: [
+        { name: "招牌奶茶", cup: 50, bottle: 160, type: ["milk"] },
+        { name: "香綠奶茶", cup: 50, bottle: 160, type: ["milk"] },
+        { name: "烏龍奶茶", cup: 50, bottle: 160, type: ["milk"] },
+        { name: "蜂蜜奶茶", cup: 65, bottle: null, fixedSugar: true, type: ["milk"] },
+        { name: "胚芽奶茶", cup: 60, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "椰果奶茶", cup: 60, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "布丁奶茶", cup: 60, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "珍珠綠奶", cup: 50, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "布丁綠奶", cup: 60, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "珍珠烏龍奶茶", cup: 50, bottle: null, noTopping: true, type: ["milk"] }
+      ]
+    },
+    {
+      category: "無咖啡因",
+      items: [
+        { name: "熬煮冬瓜茶", cup: 35, bottle: 115, fixedSugar: true, type: ["tea"] },
+        { name: "玄米穀麥茶", cup: 40, bottle: 130, type: ["tea"] },
+        { name: "冬檸穀麥", cup: 55, bottle: 175, type: ["lemon"] },
+        { name: "穀麥豆香", cup: 55, bottle: 175, type: ["soy"] },
+        { name: "穀麥奶茶", cup: 55, bottle: 175, type: ["milk"] },
+        { name: "穀麥太后牛乳", cup: 65, bottle: 205, type: ["taihou"] }
+      ]
+    },
+    {
+      category: "風味茶",
+      items: [
+        { name: "冬瓜紅茶", cup: 35, bottle: 115, type: ["tea"] },
+        { name: "鮮檸紅茶", cup: 50, bottle: 160, type: ["tea", "lemon"] },
+        { name: "樂多香綠", cup: 55, bottle: null, noTopping: true, type: ["tea"] },
+        { name: "蜂蜜烏龍", cup: 55, bottle: null, noTopping: true, type: ["tea"] }
+      ]
+    },
+    {
+      category: "醇太后",
+      note: "茶+牛乳，無糖仍有牛乳甜度",
+      items: [
+        { name: "冬瓜太后牛乳", cup: 60, bottle: 190, fixedSugar: true, type: ["taihou"] },
+        { name: "香綠太后牛乳", cup: 60, bottle: 190, type: ["taihou"] },
+        { name: "烏龍太后牛乳", cup: 60, bottle: 190, type: ["taihou"] },
+        { name: "珍珠太后牛乳", cup: 65, bottle: null, noTopping: true, type: ["taihou"] },
+        { name: "布丁太后牛乳", cup: 70, bottle: null, noTopping: true, type: ["taihou"] }
+      ]
+    },
+    {
+      category: "醇芝麻",
+      note: "最佳風味半糖，均不可加料",
+      items: [
+        { name: "黑芝麻豆漿", cup: 60, bottle: null, noTopping: true, note: "無咖啡因", type: ["soy"] },
+        { name: "黑芝麻奶茶", cup: 60, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "黑芝麻珍珠奶茶", cup: 65, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "黑芝麻胚芽奶茶", cup: 70, bottle: null, noTopping: true, type: ["milk"] },
+        { name: "黑芝麻太后牛乳", cup: 75, bottle: null, noTopping: true, type: ["taihou"] }
+      ]
+    },
+    {
+      category: "醇鮮果",
+      note: "最佳風味半糖，僅可製作冷飲",
+      items: [
+        { name: "鮮檸橙香綠", cup: 65, bottle: null, coldOnly: true, type: ["fruit", "lemon"] },
+        { name: "鮮百香果綠", cup: 65, bottle: null, coldOnly: true, type: ["fruit"] },
+        { name: "鮮百香雙Q", cup: 70, bottle: null, coldOnly: true, noTopping: true, note: "含珍珠+椰果", type: ["fruit"] }
+      ]
+    },
+    {
+      category: "老賴冰粿室",
+      note: "僅可製作冷飲",
+      items: [
+        { name: "冬檸冰粿飲", cup: 60, bottle: null, coldOnly: true, fixedSugar: true, note: "無咖啡因", type: ["lemon"] },
+        { name: "烏龍冰粿奶茶", cup: 60, bottle: null, coldOnly: true, type: ["milk"] },
+        { name: "珍珠冰粿奶茶", cup: 60, bottle: null, coldOnly: true, noTopping: true, type: ["milk"] }
+      ]
+    },
+    {
+      category: "冰淇淋系列",
+      note: "僅可製作冷飲，無糖仍有甜度",
+      items: [
+        { name: "冰淇淋紅茶", cup: 55, bottle: null, coldOnly: true, type: ["tea"] },
+        { name: "凍香冰淇淋紅茶", cup: 60, bottle: null, coldOnly: true, noTopping: true, type: ["tea"] },
+        { name: "冰淇淋奶茶", cup: 65, bottle: null, coldOnly: true, type: ["milk"] },
+        { name: "凍香冰淇淋奶茶", cup: 70, bottle: null, coldOnly: true, noTopping: true, type: ["milk"] }
+      ]
+    },
+    {
+      category: "奶蓋系列",
+      note: "最佳風味微糖，僅可製作冷飲，不可額外加料",
+      items: [
+        { name: "海鹽奶蓋紅茶", cup: 60, bottle: null, coldOnly: true, noTopping: true, type: ["tea"] },
+        { name: "烤糖奶蓋紅", cup: 70, bottle: null, coldOnly: true, noTopping: true, type: ["tea"] }
+      ]
+    }
+  ];
+
+  const iceList = ["正常冰", "少冰", "微冰", "去冰", "完全去冰", "溫飲", "熱飲"];
+  const sugarList = ["正常糖", "半糖", "微糖", "一分糖", "無糖"];
+  
+  // 加料規則清單與限制標註
+  const toppingMaster = [
+    { name: "珍珠", price: 10, req: "all" },
+    { name: "紅茶凍", price: 10, req: "noHot" }, // 溫熱飲不可加
+    { name: "胚芽", price: 10, req: "milkOrSoy" }, // 只可加於奶類、太后、純豆漿
+    { name: "椰果", price: 10, req: "noSoy" }, // 豆漿不可加
+    { name: "黑糖冰粿", price: 10, req: "noHot" }, // 溫熱飲不可加
+    { name: "布丁", price: 15, req: "noAcid" }, // 檸檬、烏梅、醇鮮果不可加
+    { name: "冰淇淋", price: 20, req: "teaMilkSoy" } // 只可加於純茶、奶類、太后、豆漿
+  ];
+
+  let currentItem = null;
+  let cart = [];
+
+  // 渲染菜單列表
+  function renderMenu() {
+    const container = document.getElementById("menu-container");
+    let html = "";
+    
+    menuData.forEach(cat => {
+      let catNote = cat.note ? `<span class="category-note">（${cat.note}）</span>` : '';
+      html += `<div class="menu-category"><span>${cat.category}</span>${catNote}</div>`;
+      
+      cat.items.forEach(item => {
+        let priceStr = `杯 $${item.cup}`;
+        if (item.bottle) priceStr += ` / 瓶 $${item.bottle}`;
+        
+        let tags = [];
+        if (item.noTopping) tags.push(`<span class="tag-no-topping">🚫不可加料</span>`);
+        if (item.coldOnly) tags.push(`<span class="tag-cold-only">❄️僅限冷飲</span>`);
+        if (item.fixedSugar) tags.push(`<span class="tag-cold-only" style="background:#fffbe6; color:#d48806; border-color:#ffe58f;">甜度固定</span>`);
+
+        let noteText = item.note ? ` (${item.note})` : '';
+
+        html += `
+          <div class="item-card">
+            <div class="item-info">
+              <div class="item-name">
+                ${item.name}${noteText}
+              </div>
+              <div class="item-desc">${tags.join(' ')}</div>
+              <div class="item-price">${priceStr}</div>
+            </div>
+            <button class="btn-add" onclick="openModal('${item.name}')">選擇</button>
+          </div>
+        `;
+      });
+    });
+    container.innerHTML = html;
+  }
+
+  // 開啟選購 Modal
+  function openModal(itemName) {
+    for (let cat of menuData) {
+      let found = cat.items.find(i => i.name === itemName);
+      if (found) { currentItem = found; break; }
+    }
+
+    document.getElementById("modal-title").innerText = currentItem.name;
+    document.getElementById("modal-subtitle").innerText = currentItem.note ? currentItem.note : '';
+
+    // 1. 規格 (杯/瓶)
+    const sizeBox = document.getElementById("size-options");
+    let sizeHtml = `<label><input type="radio" name="size" value="杯" data-price="${currentItem.cup}" checked onchange="updateModalOptions()"><span>杯 ($${currentItem.cup})</span></label>`;
+    if (currentItem.bottle) {
+      sizeHtml += `<label><input type="radio" name="size" value="瓶" data-price="${currentItem.bottle}" onchange="updateModalOptions()"><span>瓶 ($${currentItem.bottle})</span></label>`;
+    }
+    sizeBox.innerHTML = sizeHtml;
+
+    updateModalOptions();
+    document.getElementById("custom-modal").style.display = "flex";
+  }
+
+  // 動態更新 Modal 選項 (處理瓶裝、溫熱飲與細緻加料規則)
+  function updateModalOptions() {
+    const sizeVal = document.querySelector('input[name="size"]:checked').value;
+    const isBottle = sizeVal === "瓶";
+
+    // --- A. 冰塊選項 ---
+    const iceBox = document.getElementById("ice-options");
+    let iceHtml = "";
+    iceList.forEach(ice => {
+      // 瓶裝或冷飲限定商品關閉「溫飲」與「熱飲」
+      const isHotTemp = ice === "溫飲" || ice === "熱飲";
+      if ((isBottle || currentItem.coldOnly) && isHotTemp) return;
+      
+      iceHtml += `<label><input type="radio" name="ice" value="${ice}" ${ice==="微冰"?"checked":""} onchange="updateToppingAvailability()"><span>${ice}</span></label>`;
+    });
+    iceBox.innerHTML = iceHtml;
+
+    // --- B. 甜度選項 ---
+    const sugarBox = document.getElementById("sugar-options");
+    let sugarHtml = "";
+    sugarList.forEach(sugar => {
+      // 若甜度固定，強制選擇半糖/正常糖，其他停用
+      if (currentItem.fixedSugar && sugar !== "正常糖" && sugar !== "半糖") return;
+      sugarHtml += `<label><input type="radio" name="sugar" value="${sugar}" ${sugar==="微糖"||currentItem.fixedSugar?"checked":""}><span>${sugar}</span></label>`;
+    });
+    sugarBox.innerHTML = sugarHtml;
+
+    // --- C. 加料選項 ---
+    updateToppingAvailability();
+  }
+
+  // 根據選擇規格、溫度、茶飲種類檢驗加料區可用性
+  function updateToppingAvailability() {
+    const sizeVal = document.querySelector('input[name="size"]:checked').value;
+    const isBottle = sizeVal === "瓶";
+    const selectedIceEl = document.querySelector('input[name="ice"]:checked');
+    const selectedIce = selectedIceEl ? selectedIceEl.value : "微冰";
+    const isHotTemp = selectedIce === "溫飲" || selectedIce === "熱飲";
+
+    const toppingSection = document.getElementById("topping-section");
+    const toppingBox = document.getElementById("topping-options");
+    const msgBox = document.getElementById("topping-msg");
+
+    toppingBox.innerHTML = "";
+    msgBox.style.display = "none";
+
+    // 限制條件1: 瓶裝 (2000ml) 或 商品標註「不可加料」
+    if (isBottle) {
+      toppingBox.innerHTML = `<span style="font-size:0.85rem; color:#888;">⚠️ 瓶裝商品（2000ml）無法加料</span>`;
+      return;
+    }
+    if (currentItem.noTopping) {
+      toppingBox.innerHTML = `<span style="font-size:0.85rem; color:#888;">⚠️ 此飲品設定為不可額外加料</span>`;
+      return;
+    }
+
+    // 逐一評估配料是否合法
+    const types = currentItem.type || [];
+    const isMilk = types.includes("milk");
+    const isTaihou = types.includes("taihou");
+    const isSoy = types.includes("soy");
+    const isTea = types.includes("tea");
+    const isLemon = types.includes("lemon");
+    const isPlum = types.includes("plum");
+    const isFruit = types.includes("fruit");
+
+    let toppingHtml = "";
+
+    toppingMaster.forEach(t => {
+      let isValid = true;
+      let reason = "";
+
+      // 規則 1: 紅茶凍 & 黑糖冰粿 - 溫熱飲不可加
+      if (t.req === "noHot" && isHotTemp) {
+        isValid = false;
+        reason = "溫熱飲不可加";
+      }
+
+      // 規則 2: 胚芽 - 只可加於奶類、太后、純豆漿 (老賴豆漿)
+      if (t.req === "milkOrSoy") {
+        const isPureSoy = isSoy && !isTea; // 老賴豆漿
+        if (!isMilk && !isTaihou && !isPureSoy) {
+          isValid = false;
+          reason = "限奶類/太后/純豆漿";
+        }
+      }
+
+      // 規則 3: 椰果 - 豆漿不可加
+      if (t.req === "noSoy" && isSoy) {
+        isValid = false;
+        reason = "豆漿類不可加";
+      }
+
+      // 規則 4: 布丁 - 檸檬、烏梅、醇鮮果不可加
+      if (t.req === "noAcid" && (isLemon || isPlum || isFruit)) {
+        isValid = false;
+        reason = "檸檬/烏梅/鮮果不可加";
+      }
+
+      // 規則 5: 冰淇淋 - 只可加於純茶、奶類、太后、豆漿
+      if (t.req === "teaMilkSoy") {
+        if (!isTea && !isMilk && !isTaihou && !isSoy) {
+          isValid = false;
+          reason = "限純茶/奶類/太后/豆漿";
+        }
+      }
+
+      if (isValid) {
+        toppingHtml += `
+          <label>
+            <input type="checkbox" name="topping" value="${t.name}" data-price="${t.price}">
+            <span>+${t.name} (+$${t.price})</span>
+          </label>
+        `;
+      } else {
+        toppingHtml += `
+          <label class="disabled" title="${reason}">
+            <input type="checkbox" disabled>
+            <span>+${t.name} (${reason})</span>
+          </label>
+        `;
+      }
+    });
+
+    toppingBox.innerHTML = toppingHtml;
+  }
+
+  function closeModal() {
+    document.getElementById("custom-modal").style.display = "none";
+  }
+
+  // 加入購物車
+  function addToCart() {
+    const sizeRadio = document.querySelector('input[name="size"]:checked');
+    const size = sizeRadio.value;
+    let basePrice = parseInt(sizeRadio.dataset.price);
+
+    const ice = document.querySelector('input[name="ice"]:checked').value;
+    const sugar = document.querySelector('input[name="sugar"]:checked').value;
+
+    let toppings = [];
+    let toppingPrice = 0;
+    
+    document.querySelectorAll('input[name="topping"]:checked').forEach(cb => {
+      toppings.push(cb.value);
+      toppingPrice += parseInt(cb.dataset.price);
+    });
+
+    const itemTotal = basePrice + toppingPrice;
+
+    cart.push({
+      name: currentItem.name,
+      size: size,
+      ice: ice,
+      sugar: sugar,
+      toppings: toppings,
+      price: itemTotal
+    });
+
+    closeModal();
+    renderCart();
+  }
+
+  // 刪除品項
+  function removeFromCart(index) {
+    cart.splice(index, 1);
+    renderCart();
+  }
+
+  // 渲染購物車
+  function renderCart() {
+    const cartBox = document.getElementById("cart-list");
+    const totalBox = document.getElementById("cart-total");
+    const countBox = document.getElementById("cart-count");
+
+    if (cart.length === 0) {
+      cartBox.innerHTML = `<div class="empty-cart">尚未選擇任何品項</div>`;
+      totalBox.innerText = "總金額：$0";
+      countBox.innerText = "總數量：0 杯/瓶";
+      return;
+    }
+
+    let html = "";
+    let total = 0;
+    cart.forEach((item, index) => {
+      total += item.price;
+      let topStr = item.toppings.length > 0 ? ` + 加料:[${item.toppings.join(',')}]` : '';
+      html += `
+        <div class="cart-item">
+          <div class="cart-item-details">
+            <div class="cart-item-title">${item.name} (${item.size})</div>
+            <div class="cart-item-spec">${item.sugar} / ${item.ice}${topStr}</div>
+            <div class="cart-item-price">$${item.price}</div>
+          </div>
+          <button class="btn-del" onclick="removeFromCart(${index})">刪除</button>
+        </div>
+      `;
+    });
+
+    cartBox.innerHTML = html;
+    totalBox.innerText = `總金額：$${total}`;
+    countBox.innerText = `總數量：${cart.length} 杯/瓶`;
+  }
+
+  // 一鍵複製訂單全明細
+  function copyOrderDetails() {
+    const groupId = document.getElementById("group-id").value.trim();
+    const userName = document.getElementById("user-name").value.trim();
+    const userPhone = document.getElementById("user-phone").value.trim();
+
+    if (!groupId || !userName || !userPhone) {
+      alert("⚠️ 請填寫完整的團露編號、姓名與電話！");
+      return;
+    }
+
+    if (cart.length === 0) {
+      alert("⚠️ 購物車為空，請先點選飲品！");
+      return;
+    }
+
+    let total = 0;
+    let text = `【老賴茶棧 - 露營飲料點餐單】\n`;
+    text += `====================\n`;
+    text += `🎪 團露編號：${groupId}\n`;
+    text += `👤 訂購姓名：${userName}\n`;
+    text += `📞 聯絡電話：${userPhone}\n`;
+    text += `====================\n`;
+    text += `📋 訂購明細：\n`;
+
+    cart.forEach((item, index) => {
+      total += item.price;
+      let topStr = item.toppings.length > 0 ? ` (+${item.toppings.join(',')})` : '';
+      text += `${index + 1}. ${item.name} [${item.size}] / ${item.sugar} / ${item.ice}${topStr} - $${item.price}\n`;
+    });
+
+    text += `====================\n`;
+    text += `🥤 總數量：${cart.length} 杯/瓶\n`;
+    text += `💰 總金額：$${total} 元\n`;
+
+    // 複製到剪貼簿 (標準語法與相容備用機制)
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert("✅ 已成功複製全品項明細至剪貼簿！可以直接貼至 LINE 或表格群組。");
+      }).catch(err => {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand("copy");
+      alert("✅ 已成功複製全品項明細至剪貼簿！");
+    } catch (err) {
+      alert("❌ 複製失敗，請手動截圖或複製畫面內容。");
+    }
+    document.body.removeChild(textarea);
+  }
+
+  // 初始化菜單
+  renderMenu();
+</script>
+</body>
+</html>
